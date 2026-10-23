@@ -498,6 +498,9 @@ ucontext_probe = '''
 # For POSIX prefer ucontext, but it's not always possible. The fallback
 # is sigcontext.
 supported_backends = []
+# Bionic does not implement the ucontext functions; libucontext provides
+# them with a libucontext_ prefix.
+libucontext = not_found
 if host_os == 'windows'
   supported_backends += ['windows']
 elif host_os == 'emscripten'
@@ -505,6 +508,16 @@ elif host_os == 'emscripten'
 else
   if host_os != 'darwin' and cc.links(ucontext_probe)
     supported_backends += ['ucontext']
+  elif host_os != 'darwin'
+    libucontext = dependency('libucontext', required: false)
+    if libucontext.found() and cc.links('''
+        #include <libucontext/libucontext.h>
+        int main(void) { libucontext_makecontext(0, 0, 0); return 0; }''',
+        dependencies: libucontext)
+      supported_backends += ['ucontext']
+    else
+      libucontext = not_found
+    endif
   endif
   supported_backends += ['sigaltstack']
 endif
@@ -514,6 +527,9 @@ if coroutine_backend == 'auto'
 elif coroutine_backend not in supported_backends
   error('"@0@" backend requested but not available.  Available backends: @1@' \
         .format(coroutine_backend, ', '.join(supported_backends)))
+endif
+if coroutine_backend != 'ucontext'
+  libucontext = not_found
 endif
 
 # Compiles if SafeStack *not* enabled
@@ -2571,6 +2587,7 @@ config_host_data.set('QEMU_VERSION_MINOR', meson.project_version().split('.')[1]
 config_host_data.set('QEMU_VERSION_MICRO', meson.project_version().split('.')[2])
 
 config_host_data.set_quoted('CONFIG_HOST_DSOSUF', host_dsosuf)
+config_host_data.set('CONFIG_LIBUCONTEXT', libucontext.found())
 config_host_data.set('HAVE_HOST_BLOCK_DEVICE', have_host_block_device)
 
 have_coroutine_pool = get_option('coroutine_pool')

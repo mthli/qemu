@@ -23,7 +23,15 @@
 #define _FORTIFY_SOURCE 0
 
 #include "qemu/osdep.h"
+#ifdef CONFIG_LIBUCONTEXT
+#include <libucontext/libucontext.h>
+#define ucontext_t libucontext_ucontext_t
+#define getcontext libucontext_getcontext
+#define makecontext libucontext_makecontext
+#define swapcontext libucontext_swapcontext
+#else
 #include <ucontext.h>
+#endif
 #include "qemu/coroutine_int.h"
 #include "qemu/coroutine-tls.h"
 
