@@ -43,6 +43,8 @@ meson_options_help() {
   printf "%s\n" '                           jemalloc/system/tcmalloc)'
   printf "%s\n" '  --enable-module-upgrades try to load modules from alternate paths for'
   printf "%s\n" '                           upgrades'
+  printf "%s\n" '  --enable-qenix           build system emulators as shared libraries for'
+  printf "%s\n" '                           the qenix Android app'
   printf "%s\n" '  --enable-rng-none        dummy RNG, avoid using /dev/(u)random and'
   printf "%s\n" '                           getrandom()'
   printf "%s\n" '  --enable-safe-stack      SafeStack Stack Smash Protection (requires'
@@ -455,6 +457,8 @@ _meson_option_parse() {
     --with-suffix=*) quote_sh "-Dqemu_suffix=$2" ;;
     --enable-qemu-vnc) printf "%s" -Dqemu_vnc=enabled ;;
     --disable-qemu-vnc) printf "%s" -Dqemu_vnc=disabled ;;
+    --enable-qenix) printf "%s" -Dqenix=true ;;
+    --disable-qenix) printf "%s" -Dqenix=false ;;
     --enable-qga-vss) printf "%s" -Dqga_vss=enabled ;;
     --disable-qga-vss) printf "%s" -Dqga_vss=disabled ;;
     --enable-qom-cast-debug) printf "%s" -Dqom_cast_debug=true ;;

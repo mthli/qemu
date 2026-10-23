@@ -1,0 +1,11 @@
+/*
+ * Symbols exported by libqemu-system-*.so built with -Dqenix=true,
+ * see include/qenix.h.
+ */
+{
+  global:
+    qenix_qemu_main;
+    qenix_set_exit_hook;
+  local:
+    *;
+};

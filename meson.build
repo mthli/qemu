@@ -2591,6 +2591,7 @@ config_host_data.set('QEMU_VERSION_MICRO', meson.project_version().split('.')[2]
 
 config_host_data.set_quoted('CONFIG_HOST_DSOSUF', host_dsosuf)
 config_host_data.set('CONFIG_LIBUCONTEXT', libucontext.found())
+config_host_data.set('CONFIG_QENIX', get_option('qenix'))
 config_host_data.set('CONFIG_SHM_OPEN', have_shm_open)
 config_host_data.set('HAVE_HOST_BLOCK_DEVICE', have_host_block_device)
 
@@ -4468,14 +4469,29 @@ foreach target : target_dirs
       exe_name += '-unsigned'
     endif
 
-    emulator = executable(exe_name, exe['sources'],
-               install: true,
-               c_args: c_args,
-               dependencies: arch_deps + exe['dependencies'],
-               objects: lib.extract_all_objects(recursive: true),
-               link_depends: [block_syms, qemu_syms],
-               link_args: link_args,
-               win_subsystem: exe['win_subsystem'])
+    if get_option('qenix') and target_type == 'system'
+      # Loaded into an Android app process: only the qenix_*
+      # entry points are exported, and exit() must not run static
+      # destructors under the other threads of that process.
+      qenix_map = meson.current_source_dir() / 'system/qenix.map'
+      emulator = shared_library(exe_name, exe['sources'] + files('system/qenix.c'),
+                 install: true,
+                 c_args: c_args,
+                 dependencies: arch_deps + exe['dependencies'],
+                 objects: lib.extract_all_objects(recursive: true),
+                 link_depends: [block_syms, qemu_syms, files('system/qenix.map')],
+                 link_args: link_args + ['-Wl,--wrap=exit',
+                                         '-Wl,--version-script,' + qenix_map])
+    else
+      emulator = executable(exe_name, exe['sources'],
+                 install: true,
+                 c_args: c_args,
+                 dependencies: arch_deps + exe['dependencies'],
+                 objects: lib.extract_all_objects(recursive: true),
+                 link_depends: [block_syms, qemu_syms],
+                 link_args: link_args,
+                 win_subsystem: exe['win_subsystem'])
+    endif
 
     if host_os == 'darwin'
       icon = 'pc-bios/qemu.rsrc'

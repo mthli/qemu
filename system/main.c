@@ -28,6 +28,10 @@
 #include "system/replay.h"
 #include "system/system.h"
 
+#ifdef CONFIG_QENIX
+#include "qenix.h"
+#endif
+
 #ifdef CONFIG_SDL
 /*
  * SDL insists on wrapping the main() function with its own implementation on
@@ -66,7 +70,11 @@ static int os_darwin_cfrunloop_main(void)
 int (*qemu_main)(void) = os_darwin_cfrunloop_main;
 #endif
 
+#ifdef CONFIG_QENIX
+int qenix_qemu_main(int argc, char **argv)
+#else
 int main(int argc, char **argv)
+#endif
 {
     qemu_init(argc, argv);
 
