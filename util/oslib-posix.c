@@ -982,6 +982,7 @@ void qemu_close_all_open_fd(const int *skip, unsigned int nskip)
     }
 }
 
+#ifdef CONFIG_SHM_OPEN
 int qemu_shm_alloc(size_t size, Error **errp)
 {
     g_autoptr(GString) shm_name = g_string_new(NULL);
@@ -1033,3 +1034,10 @@ int qemu_shm_alloc(size_t size, Error **errp)
 
     return fd;
 }
+#else
+int qemu_shm_alloc(size_t size, Error **errp)
+{
+    error_setg(errp, "POSIX shared memory is not available on this host");
+    return -1;
+}
+#endif

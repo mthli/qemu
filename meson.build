@@ -1385,10 +1385,13 @@ endif
 spice_headers = spice.partial_dependency(compile_args: true, includes: true)
 
 rt = not_found
+have_shm_open = false
 if host_os != 'windows'
   have_shm_open = cc.has_function('shm_open')
   if not have_shm_open
-    rt = cc.find_library('rt', required: true)
+    # Android's Bionic has neither shm_open() nor librt
+    rt = cc.find_library('rt', required: cc.get_define('__ANDROID__') == '')
+    have_shm_open = rt.found()
   endif
 endif
 
@@ -2588,6 +2591,7 @@ config_host_data.set('QEMU_VERSION_MICRO', meson.project_version().split('.')[2]
 
 config_host_data.set_quoted('CONFIG_HOST_DSOSUF', host_dsosuf)
 config_host_data.set('CONFIG_LIBUCONTEXT', libucontext.found())
+config_host_data.set('CONFIG_SHM_OPEN', have_shm_open)
 config_host_data.set('HAVE_HOST_BLOCK_DEVICE', have_host_block_device)
 
 have_coroutine_pool = get_option('coroutine_pool')
